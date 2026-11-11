@@ -1,0 +1,199 @@
+<!-- ... existing code ... -->
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom Design Tokens & Aesthetics -->
+  <style>
+<!-- ... existing code ... -->
+    function renderCaseStudies(filter = 'All') {
+      const grid = document.getElementById('caseStudiesGrid');
+      if (!grid) return;
+      const items = filter === 'All'
+        ? caseStudiesData
+        : caseStudiesData.filter(c => c.category === filter);
+
+      grid.innerHTML = items.map(cs => `
+        <div class="bento-card p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                ${cs.category}
+              </span>
+              <span class="text-[11px] font-mono text-zinc-400">${cs.metric}</span>
+            </div>
+
+            <h3 class="font-display font-bold text-lg text-white leading-snug">${cs.title}</h3>
+            <p class="text-[11px] font-mono text-zinc-400 mt-0.5">${cs.client}</p>
+
+            <p class="text-xs text-zinc-300 mt-3 line-clamp-3 leading-relaxed">
+              ${cs.problem}
+            </p>
+          </div>
+
+          <div class="mt-5 pt-4 border-t border-white/10 space-y-3">
+            <div class="flex flex-wrap gap-1">
+              ${cs.tools.slice(0, 3).map(t => `<span class="px-2 py-0.5 rounded bg-zinc-900 text-[10px] font-mono text-zinc-400 border border-white/5">${t}</span>`).join('')}
+            </div>
+
+            <button onclick="openCaseStudyModal(${cs.id})" class="w-full py-2 px-3 rounded-xl text-xs font-mono font-semibold text-zinc-200 hover:text-zinc-950 bg-zinc-900 hover:bg-emerald-400 border border-white/10 flex items-center justify-center gap-1.5 transition">
+              <span>Inspect Case Study</span>
+              <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      initSpotlightCards();
+      safeCreateIcons();
+    }
+<!-- ... existing code ... -->
+    function openCaseStudyModal(id) {
+      const cs = caseStudiesData.find(item => item.id === id);
+      if (!cs) return;
+      document.getElementById('modalCategoryBadge').textContent = cs.category;
+      document.getElementById('modalMetricBadge').textContent = cs.metric;
+      document.getElementById('modalTitle').textContent = cs.title;
+      document.getElementById('modalSubtitle').textContent = cs.client;
+      document.getElementById('modalProblem').textContent = cs.problem;
+      document.getElementById('modalDeliverable').textContent = cs.deliverable;
+      document.getElementById('modalMethodology').innerHTML = cs.methodology.map(m => `<li>${m}</li>`).join('');
+      document.getElementById('modalVerification').textContent = cs.verification;
+      document.getElementById('modalTools').innerHTML = cs.tools.map(t => `<span class="px-3 py-1 rounded-lg bg-zinc-900 border border-white/10 text-xs font-mono text-emerald-300">${t}</span>`).join('');
+
+      const modal = document.getElementById('caseStudyModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      safeCreateIcons();
+    }
+<!-- ... existing code ... -->
+    function renderPipelineSimulator() {
+      const btnContainer = document.getElementById('pipelineNodeButtons');
+      const inspector = document.getElementById('pipelineInspector');
+      if (!btnContainer || !inspector) return;
+      btnContainer.innerHTML = pipelineNodes.map((node, i) => {
+        const isActive = i === activePipelineIndex;
+        return `
+          <button onclick="selectPipelineNode(${i})" class="text-left p-4 rounded-2xl border transition ${isActive ? 'bg-emerald-500/15 border-emerald-400 text-white shadow-lg' : 'bg-[#121215] border-white/10 text-zinc-300 hover:border-white/25'}">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono ${isActive ? 'text-emerald-300 font-bold' : 'text-zinc-500'}">STAGE ${node.stage}</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono ${isActive ? 'bg-emerald-400 text-zinc-950 font-semibold' : 'bg-zinc-900 text-zinc-400'}">${node.tag}</span>
+            </div>
+            <p class="font-display font-bold text-sm mt-2">${node.name}</p>
+            <p class="text-[11px] text-zinc-400 mt-1 line-clamp-2">${node.summary}</p>
+          </button>
+        `;
+      }).join('');
+
+      const active = pipelineNodes[activePipelineIndex];
+      inspector.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <div class="lg:col-span-7 space-y-3">
+            <div class="inline-flex items-center gap-2 text-xs font-mono text-emerald-400">
+              <span>STAGE ${active.stage} INSPECTOR</span>
+              <span>·</span>
+              <span>${active.tag}</span>
+            </div>
+            <h3 class="font-display font-bold text-2xl text-white">${active.name}</h3>
+            <p class="text-sm text-zinc-300 leading-relaxed">${active.sop}</p>
+            <div class="pt-2 flex flex-wrap gap-2">
+              ${active.tools.map(t => `<span class="px-3 py-1 rounded-lg bg-zinc-900 border border-white/10 text-xs font-mono text-cyan-300">${t}</span>`).join('')}
+            </div>
+          </div>
+          <div class="lg:col-span-5 p-5 rounded-2xl bg-zinc-900/90 border border-white/10 space-y-2">
+            <span class="text-xs font-mono uppercase text-emerald-400 flex items-center gap-1.5">
+              <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+              Quality Control Gate
+            </span>
+            <p class="text-sm text-white font-medium">${active.qa}</p>
+            <p class="text-xs text-zinc-400">No record advances to the next stage until this verification requirement is met.</p>
+          </div>
+        </div>
+      `;
+      safeCreateIcons();
+    }
+<!-- ... existing code ... -->
+        <!-- Bottom Action Bar Connected to Google Calendar -->
+        <div class="pt-3 border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div class="text-xs text-zinc-300">
+            <span class="text-zinc-400 font-mono block text-[11px]">Selected Discovery Slot:</span>
+            <strong class="text-white text-sm">${formattedSelectedDate} · ${selectedSlotObj.label}</strong>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5">
+            <a href="https://calendar.app.google/iVskhfkYjQz2C1DQA" target="_blank" rel="noopener noreferrer" class="px-5 py-2.5 rounded-xl font-semibold text-xs text-zinc-950 bg-emerald-400 hover:bg-emerald-300 inline-flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 transition">
+              <i data-lucide="calendar-check-2" class="w-4 h-4"></i>
+              <span>Confirm on Google Booking Page</span>
+            </a>
+
+            <a href="${gcalTemplateUrl}" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded-xl font-mono text-xs text-white bg-zinc-900 hover:bg-zinc-800 border border-white/10 inline-flex items-center gap-1.5 transition" title="Create a Google Calendar invite">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Add Invite to Google Calendar</span>
+            </a>
+          </div>
+        </div>
+      `;
+      safeCreateIcons();
+    }
+
+    // 5. FAQ ACCORDION DATA
+    const faqList = [
+      {
+        q: "How are projects priced?",
+        a: "My standard hourly rate is $9/hr for lead research, list enrichment, CRM organization, and email campaign management. Custom AI & n8n automation projects are scoped by complexity, integrations, and testing."
+      },
+      {
+        q: "How do you prevent unverified AI output?",
+        a: "Every AI-assisted workflow (n8n, ChatGPT, Claude) includes a mandatory Stage 04 Human Review Gate. I manually verify roles, company fit, and contact validity before any deliverable is handed off."
+      },
+      {
+        q: "What tools do you use daily?",
+        a: "Google Sheets, Excel, n8n, ChatGPT, Claude, B2B web directories, email verification tools, CRM platforms, plus graphic design and video editing tools."
+      }
+    ];
+
+    function renderFAQs() {
+      const container = document.getElementById('faqContainer');
+      if (!container) return;
+      container.innerHTML = `
+        <p class="text-xs font-mono uppercase text-emerald-400 mb-1">Quick FAQ</p>
+        ${faqList.map((f, i) => `
+          <div class="rounded-xl bg-zinc-900/80 border border-white/5 overflow-hidden">
+            <button onclick="toggleFAQ(${i})" class="w-full px-4 py-3 text-left text-xs sm:text-sm font-semibold text-white flex items-center justify-between gap-2">
+              <span>${f.q}</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+            </button>
+            <div id="faqAns-${i}" class="${i === 0 ? '' : 'hidden'} px-4 pb-3 text-xs text-zinc-300 leading-relaxed border-t border-white/5 pt-2">
+              ${f.a}
+            </div>
+          </div>
+        `).join('')}
+      `;
+      safeCreateIcons();
+    }
+
+    function safeCreateIcons() {
+      try {
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+          lucide.createIcons();
+        }
+      } catch (err) {
+        console.warn('Lucide icons loading...', err);
+      }
+    }
+
+    window.onload = function () {
+      restoreSavedPortrait();
+      renderCaseStudies('All');
+      renderPipelineSimulator();
+      generateResearchPlan();
+      renderFAQs();
+      initSpotlightCards();
+      initScrollSpy();
+      initParallaxAndStacking();
+      safeCreateIcons();
+    };
+  </script>
+</body>
+</html>
